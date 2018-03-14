@@ -2,33 +2,33 @@ package pitcher
 
 // Artist structure
 type Artist struct {
-	GID  string `db:"gid"`
-	Name string `db:"name"`
+	GID  string `db:"gid" json:"mbid"`
+	Name string `db:"name"json:"name"`
 }
 
 // ReleaseDate structure
 type ReleaseDate struct {
-	Year  string `db:"date_year"`
-	Month string `db:"date_month"`
-	Day   string `db:"date_day"`
+	Year  string `db:"date_year" json:"year"`
+	Month string `db:"date_month" json:"month"`
+	Day   string `db:"date_day" json:"day"`
 }
 
 // Album structure
 type Album struct {
-	ID          string `db:"id"`
-	GID         string `db:"gid"`
-	Name        string `db:"name"`
-	ReleaseDate *ReleaseDate
+	ID          int          `db:"id" json:"-"`
+	GID         string       `db:"gid" json:"mbid"`
+	Name        string       `db:"name" json:"name"`
+	ReleaseDate *ReleaseDate `json:"release_date"`
 }
 
 // Track structure
 type Track struct {
-	GID            string `db:"gid"`
-	RecordingID    string `db:"recording_id"`
-	Name           string `db:"name"`
-	MediumPosition int    `db:"medium_position"`
-	Position       int    `db:"position"`
-	Length         int    `db:"length"`
-	Artist         *Artist
-	Album          *Album
+	GID            string  `db:"gid" json:"mbid"`
+	RecordingID    string  `db:"recording_id" json:"recording_mbid"`
+	Name           string  `db:"name" json:"name"`
+	MediumPosition int     `db:"medium_position" json:"medium_position"`
+	Position       int     `db:"position" json:"position"`
+	Length         int     `db:"length" json:"length"`
+	Artist         *Artist `json:"artist"`
+	Album          *Album  `json:"album"`
 }
