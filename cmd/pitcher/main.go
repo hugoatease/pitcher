@@ -22,31 +22,38 @@ func main() {
 			EnvVar: "PITCHER_BIND",
 		},
 		cli.StringFlag{
-			Name:   "pghost",
+			Name:   "dbhost",
 			Value:  "localhost",
 			Usage:  "musicbrainz's postgresql database hostname",
-			EnvVar: "PITCHER_PGHOST",
+			EnvVar: "PITCHER_DBHOST",
 		},
 		cli.StringFlag{
-			Name:   "pgport",
+			Name:   "dbport",
 			Value:  "5432",
 			Usage:  "musicbrainz's postgresql database port",
-			EnvVar: "PITCHER_PGPORT",
+			EnvVar: "PITCHER_DBPORT",
 		},
 		cli.StringFlag{
-			Name:   "pgdb",
+			Name:   "dbname",
 			Value:  "musicbrainz",
 			Usage:  "musicbrainz's postgresql database name",
-			EnvVar: "PITCHER_PGNAME",
+			EnvVar: "PITCHER_DBNAME",
+		},
+		cli.StringFlag{
+			Name:   "dbuser",
+			Value:  "musicbrainz",
+			Usage:  "musicbrainz's postgresql database name",
+			EnvVar: "PITCHER_DBUSER",
 		},
 	}
 
 	app.Action = func(c *cli.Context) error {
 		config := pitcher.Config{
-			Bind:       c.String("bind"),
-			PgHost:     c.String("pghost"),
-			PgPort:     c.String("pgport"),
-			PgDatabase: c.String("pgdb"),
+			Bind:   c.String("bind"),
+			DbHost: c.String("dbhost"),
+			DbPort: c.String("dbport"),
+			DbName: c.String("dbname"),
+			DbUser: c.String("dbuser"),
 		}
 
 		server, err := pitcher.NewApp(config)

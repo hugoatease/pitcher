@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Bind       string
-	PgHost     string
-	PgPort     string
-	PgDatabase string
+	Bind   string
+	DbHost string
+	DbPort string
+	DbName string
+	DbUser string
 }
 
 type App struct {
@@ -21,7 +22,7 @@ type App struct {
 }
 
 func NewApp(config Config) (*App, error) {
-	db, err := CreateDB()
+	db, err := CreateDB(config)
 	if err != nil {
 		return nil, err
 	}

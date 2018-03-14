@@ -1,6 +1,8 @@
 package pitcher
 
 import (
+	"fmt"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -24,8 +26,10 @@ type trackQueryParams struct {
 }
 
 // CreateDB returns database connection
-func CreateDB() (db *sqlx.DB, err error) {
-	return sqlx.Open("postgres", "dbname=musicbrainz user=postgres port=5440 sslmode=disable search_path=musicbrainz")
+func CreateDB(config Config) (db *sqlx.DB, err error) {
+	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s sslmode=disable search_path=musicbrainz",
+		config.DbHost, config.DbPort, config.DbName, config.DbUser)
+	return sqlx.Open("postgres", connString)
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
