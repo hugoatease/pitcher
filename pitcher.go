@@ -9,11 +9,12 @@ import (
 )
 
 type Config struct {
-	Bind   string
-	DbHost string
-	DbPort string
-	DbName string
-	DbUser string
+	Bind       string
+	DbHost     string
+	DbPort     string
+	DbName     string
+	DbUser     string
+	DbPassword string
 }
 
 type App struct {

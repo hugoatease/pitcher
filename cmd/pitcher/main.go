@@ -45,15 +45,22 @@ func main() {
 			Usage:  "musicbrainz's postgresql database name",
 			EnvVar: "PITCHER_DBUSER",
 		},
+		cli.StringFlag{
+			Name:   "dbpassword",
+			Value:  "musicbrainz",
+			Usage:  "musicbrainz's postgresql database password",
+			EnvVar: "PITCHER_DBPASSWORD",
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
 		config := pitcher.Config{
-			Bind:   c.String("bind"),
-			DbHost: c.String("dbhost"),
-			DbPort: c.String("dbport"),
-			DbName: c.String("dbname"),
-			DbUser: c.String("dbuser"),
+			Bind:       c.String("bind"),
+			DbHost:     c.String("dbhost"),
+			DbPort:     c.String("dbport"),
+			DbName:     c.String("dbname"),
+			DbUser:     c.String("dbuser"),
+			DbPassword: c.String("dbpassword"),
 		}
 
 		server, err := pitcher.NewApp(config)

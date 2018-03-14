@@ -27,8 +27,8 @@ type trackQueryParams struct {
 
 // CreateDB returns database connection
 func CreateDB(config Config) (db *sqlx.DB, err error) {
-	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s sslmode=disable search_path=musicbrainz",
-		config.DbHost, config.DbPort, config.DbName, config.DbUser)
+	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
+		config.DbHost, config.DbPort, config.DbName, config.DbUser, config.DbPassword)
 	return sqlx.Open("postgres", connString)
 }
 
