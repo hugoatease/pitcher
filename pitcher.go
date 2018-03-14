@@ -1,24 +1,34 @@
 package pitcher
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
 
-type App struct {
-	DB *sqlx.DB
+type Config struct {
+	Bind       string
+	PgHost     string
+	PgPort     string
+	PgDatabase string
 }
 
-func NewApp() (*App, error) {
+type App struct {
+	DB     *sqlx.DB
+	Config Config
+}
+
+func NewApp(config Config) (*App, error) {
 	db, err := CreateDB()
 	if err != nil {
 		return nil, err
 	}
 
 	app := &App{
-		DB: db,
+		DB:     db,
+		Config: config,
 	}
 
 	return app, nil
@@ -27,5 +37,6 @@ func NewApp() (*App, error) {
 func (app *App) Serve() {
 	r := mux.NewRouter()
 	r.HandleFunc("/track/{trackID}", app.TrackHandler)
-	http.ListenAndServe(":5000", r)
+	log.Print("serving on ", app.Config.Bind)
+	log.Fatal(http.ListenAndServe(app.Config.Bind, r))
 }
