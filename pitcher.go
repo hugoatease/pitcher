@@ -38,7 +38,7 @@ func NewApp(config Config) (*App, error) {
 
 func (app *App) Serve() {
 	r := mux.NewRouter()
-	r.HandleFunc("/track/{trackID}", app.TrackHandler)
+	r.HandleFunc("/tracks/{trackID}", app.TrackHandler)
 	log.Print("serving on ", app.Config.Bind)
 	log.Fatal(http.ListenAndServe(app.Config.Bind, r))
 }
