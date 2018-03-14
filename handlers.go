@@ -16,11 +16,15 @@ func (app *App) TrackHandler(res http.ResponseWriter, req *http.Request) {
 	tracks, err := GetTrackData(app.DB, trackID)
 	if err != nil {
 		log.Print("Error fetching track data", err)
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	result, err := json.Marshal(tracks)
 	if err != nil {
 		log.Print("Error marshalling")
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	res.Write(result)
