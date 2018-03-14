@@ -33,22 +33,22 @@ func CreateDB(config Config) (db *sqlx.DB, err error) {
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
-func GetTrackData(db *sqlx.DB, trackID string) (*[]Track, error) {
+func GetTrackData(db *sqlx.DB, trackID string) (*Track, error) {
 	params := trackQueryParams{
 		GID: trackID,
 	}
 
-	tracks := []Track{}
+	track := Track{}
 
 	query, err := db.PrepareNamed(trackQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	err = query.Select(&tracks, params)
+	err = query.Get(&track, params)
 	if err != nil {
 		return nil, err
 	}
 
-	return &tracks, nil
+	return &track, nil
 }
