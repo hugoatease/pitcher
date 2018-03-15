@@ -3,8 +3,10 @@ package pitcher
 import (
 	"fmt"
 
+	sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql"
+	sqlxtrace "github.com/DataDog/dd-trace-go/contrib/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	pq "github.com/lib/pq"
 )
 
 const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
@@ -29,7 +31,8 @@ type trackQueryParams struct {
 func CreateDB(config Config) (db *sqlx.DB, err error) {
 	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
 		config.DbHost, config.DbPort, config.DbName, config.DbUser, config.DbPassword)
-	return sqlx.Open("postgres", connString)
+	sqltrace.Register("postgres", &pq.Driver{}, sqltrace.WithTracer(config.Tracer), sqltrace.WithServiceName("pitcher"))
+	return sqlxtrace.Open("postgres", connString)
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
