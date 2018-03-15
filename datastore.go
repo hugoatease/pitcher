@@ -16,8 +16,8 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
 			 release_date.date_day "album.releasedate.date_day"
        FROM track JOIN recording AS rec ON (rec.id = track.recording)
 			 JOIN artist AS artist ON artist.id = track.artist_credit
-       LEFT JOIN medium ON medium.id = track.medium
-       LEFT JOIN release as album ON album.id = medium.release
+       INNER JOIN medium ON medium.id = track.medium
+       INNER JOIN release as album ON album.id = medium.release
 			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=album.id) release_date ON true
        WHERE track.gid = :gid`
 

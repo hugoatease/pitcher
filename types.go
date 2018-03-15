@@ -1,5 +1,23 @@
 package pitcher
 
+import (
+	"database/sql"
+	"encoding/json"
+)
+
+// NullString that can be marshalled with null value
+type NullString struct {
+	sql.NullString
+}
+
+// MarshalJSON that returns null-values on NULL sql columns
+func (r NullString) MarshalJSON() ([]byte, error) {
+	if r.Valid {
+		return json.Marshal(r.String)
+	}
+	return json.Marshal(nil)
+}
+
 // Artist structure
 type Artist struct {
 	GID  string `db:"gid" json:"mbid"`
@@ -8,9 +26,9 @@ type Artist struct {
 
 // ReleaseDate structure
 type ReleaseDate struct {
-	Year  string `db:"date_year" json:"year"`
-	Month string `db:"date_month" json:"month"`
-	Day   string `db:"date_day" json:"day"`
+	Year  NullString `db:"date_year" json:"year"`
+	Month NullString `db:"date_month" json:"month"`
+	Day   NullString `db:"date_day" json:"day"`
 }
 
 // Album structure
