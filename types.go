@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 )
 
-// NullString that can be marshalled with null value
-type NullString struct {
-	sql.NullString
+// NullInt64 that can be marshalled with null value
+type NullInt64 struct {
+	sql.NullInt64
 }
 
 // MarshalJSON that returns null-values on NULL sql columns
-func (r NullString) MarshalJSON() ([]byte, error) {
+func (r NullInt64) MarshalJSON() ([]byte, error) {
 	if r.Valid {
-		return json.Marshal(r.String)
+		return json.Marshal(r.Int64)
 	}
 	return json.Marshal(nil)
 }
@@ -26,9 +26,9 @@ type Artist struct {
 
 // ReleaseDate structure
 type ReleaseDate struct {
-	Year  NullString `db:"date_year" json:"year"`
-	Month NullString `db:"date_month" json:"month"`
-	Day   NullString `db:"date_day" json:"day"`
+	Year  NullInt64 `db:"date_year" json:"year"`
+	Month NullInt64 `db:"date_month" json:"month"`
+	Day   NullInt64 `db:"date_day" json:"day"`
 }
 
 // Album structure
