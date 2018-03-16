@@ -18,12 +18,14 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
 			 release_date.date_month "album.releasedate.date_month",
 			 release_date.date_day "album.releasedate.date_day"
        FROM track JOIN recording AS rec ON (rec.id = track.recording)
-			 JOIN artist AS artist ON artist.id = track.artist_credit
-       INNER JOIN medium ON medium.id = track.medium
-       INNER JOIN release as release ON release.id = medium.release
-			 INNER JOIN release_group AS album ON album.id = release.release_group
+			 JOIN artist_credit_name AS artist_credit_name ON artist_credit_name.artist_credit = track.artist_credit
+			 JOIN artist AS artist ON artist.id = artist_credit_name.artist
+       JOIN medium ON medium.id = track.medium
+       JOIN release as release ON release.id = medium.release
+			 JOIN release_group AS album ON album.id = release.release_group
 			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=release.id) release_date ON true
-       WHERE track.gid = :gid`
+       WHERE track.gid = :gid
+			 ORDER BY artist_credit_name.position LIMIT 1`
 
 type trackQueryParams struct {
 	GID string `db:"gid"`
