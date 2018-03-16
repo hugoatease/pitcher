@@ -42,6 +42,7 @@ func (app *App) Serve() {
 	r := muxtrace.NewRouter(muxtrace.WithTracer(app.Config.Tracer),
 		muxtrace.WithServiceName("pitcher"))
 	r.HandleFunc("/tracks/{trackID}", app.TrackHandler)
+	r.HandleFunc("/releases/{releaseID}/image", app.ReleaseImageHandler)
 	log.Print("serving on ", app.Config.Bind)
 	log.Fatal(http.ListenAndServe(app.Config.Bind, r))
 }

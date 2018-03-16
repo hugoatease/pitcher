@@ -50,3 +50,13 @@ type Track struct {
 	Artist         *Artist `json:"artist"`
 	Album          *Album  `json:"album"`
 }
+
+// CoverArtListing structure
+type CoverArtListing struct {
+	ID          int    `db:"id" json:"id"`
+	ReleaseMbid string `db:"release_mbid" json:"release_mbid"`
+	IsFront     bool   `db:"is_front" json:"is_front"`
+	IsBack      bool   `db:"is_back" json:"is_back"`
+	MimeType    string `db:"mime_type" json:"mime_type"`
+	Suffix      string `db:"suffix" json:"suffix"`
+}

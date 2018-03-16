@@ -21,9 +21,22 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        INNER JOIN medium ON medium.id = track.medium
        INNER JOIN release as album ON album.id = medium.release
 			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=album.id) release_date ON true
-       WHERE track.gid = :gid`
+       WHERE track.gid = :gid ORDER BY ordering LIMIT 1`
 
 type trackQueryParams struct {
+	GID string `db:"gid"`
+}
+
+const coverQuery = `SELECT listing.id AS id, release.gid AS release_mbid,
+        listing.is_front AS is_front, listing.is_back AS is_back,
+				listing.mime_type AS mime_type, image_type.suffix AS suffix
+				FROM musicbrainz.release as release
+				JOIN cover_art_archive.cover_art as coverart on (coverart.release=release.id)
+				JOIN cover_art_archive.index_listing as listing ON (coverart.id=listing.id)
+				JOIN cover_art_archive.image_type as image_type ON (image_type.mime_type=listing.mime_type)
+				WHERE release.gid = :gid AND is_front=true`
+
+type coverQueryParams struct {
 	GID string `db:"gid"`
 }
 
@@ -54,4 +67,25 @@ func GetTrackData(db *sqlx.DB, trackID string) (*Track, error) {
 	}
 
 	return &track, nil
+}
+
+// GetReleaseImageData returns image data for releaseID
+func GetReleaseImageData(db *sqlx.DB, releaseID string) (*CoverArtListing, error) {
+	params := coverQueryParams{
+		GID: releaseID,
+	}
+
+	listing := CoverArtListing{}
+
+	query, err := db.PrepareNamed(coverQuery)
+	if err != nil {
+		return nil, err
+	}
+
+	err = query.Get(&listing, params)
+	if err != nil {
+		return nil, err
+	}
+
+	return &listing, nil
 }
