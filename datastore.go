@@ -12,15 +12,17 @@ import (
 const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        track.length, track.position, medium.position AS medium_position,
 			 album.gid "album.gid", album.name "album.name",
-			 artist.gid "artist.gid", artist.name "artist.name", album.id "album.id",
+			 artist.gid "artist.gid", artist.name "artist.name",
+			 album.id "album.id", release.gid "album.release_gid",
 			 release_date.date_year "album.releasedate.date_year",
 			 release_date.date_month "album.releasedate.date_month",
 			 release_date.date_day "album.releasedate.date_day"
        FROM track JOIN recording AS rec ON (rec.id = track.recording)
 			 JOIN artist AS artist ON artist.id = track.artist_credit
        INNER JOIN medium ON medium.id = track.medium
-       INNER JOIN release as album ON album.id = medium.release
-			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=album.id) release_date ON true
+       INNER JOIN release as release ON release.id = medium.release
+			 INNER JOIN release_group AS album ON album.id = release.release_group
+			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=release.id) release_date ON true
        WHERE track.gid = :gid`
 
 type trackQueryParams struct {

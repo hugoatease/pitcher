@@ -35,6 +35,7 @@ type ReleaseDate struct {
 type Album struct {
 	ID          int          `db:"id" json:"-"`
 	GID         string       `db:"gid" json:"mbid"`
+	ReleaseGID  string       `db:"release_gid" json:"release_mbid"`
 	Name        string       `db:"name" json:"name"`
 	ReleaseDate *ReleaseDate `json:"release_date"`
 }
