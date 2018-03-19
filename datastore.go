@@ -1,10 +1,12 @@
 package pitcher
 
 import (
+	"context"
 	"fmt"
 
 	sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql"
 	sqlxtrace "github.com/DataDog/dd-trace-go/contrib/jmoiron/sqlx"
+	"github.com/DataDog/dd-trace-go/tracer"
 	"github.com/jmoiron/sqlx"
 	pq "github.com/lib/pq"
 )
@@ -53,22 +55,26 @@ func CreateDB(config Config) (db *sqlx.DB, err error) {
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
-func GetTrackData(db *sqlx.DB, trackID string) (*Track, error) {
+func GetTrackData(ctx context.Context, tracer *tracer.Tracer, db *sqlx.DB, trackID string) (*Track, error) {
 	params := trackQueryParams{
 		GID: trackID,
 	}
 
 	track := Track{}
 
+	span, _ := tracer.NewChildSpanWithContext("GetTrackData.PrepareNamed", ctx)
 	query, err := db.PrepareNamed(trackQuery)
 	if err != nil {
 		return nil, err
 	}
+	span.Finish()
 
+	span, _ = tracer.NewChildSpanWithContext("GetTrackData.Get", ctx)
 	err = query.Get(&track, params)
 	if err != nil {
 		return nil, err
 	}
+	span.Finish()
 
 	return &track, nil
 }
