@@ -81,7 +81,7 @@ func GetReleaseImageData(db *sqlx.DB, releaseID string) (*CoverArtListing, error
 
 	listing := CoverArtListing{}
 
-	query, err := db.PrepareNamed(coverQuery)
+	query, err := db.Preparex(coverQuery)
 	if err != nil {
 		return nil, err
 	}

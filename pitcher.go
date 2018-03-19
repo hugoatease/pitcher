@@ -40,7 +40,7 @@ func NewApp(config Config) (*App, error) {
 
 func (app *App) Serve() {
 	r := muxtrace.NewRouter(muxtrace.WithTracer(app.Config.Tracer),
-		muxtrace.WithServiceName("pitcher"))
+		muxtrace.WithServiceName("pitcher.web"))
 	r.HandleFunc("/tracks/{trackID}", app.TrackHandler)
 	r.HandleFunc("/releases/{releaseID}/image", app.ReleaseImageHandler)
 	log.Print("serving on ", app.Config.Bind)
