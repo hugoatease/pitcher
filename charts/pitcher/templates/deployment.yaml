@@ -1,0 +1,42 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "chart.fullname" . }}
+  labels:
+    app: {{ template "chart.name" . }}
+    chart: {{ template "chart.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "chart.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "chart.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: pitcher
+        image: quay.io/hugoatease/pitcher@sha256:{{ .Values.image.sha256 }}
+{{ if .Values.pitcher.tracing }}
+        command: ["pitcher", "--tracing"]
+{{ else }}
+        command: ["pitcher"]
+{{ end }}
+        env:
+        - name: PITCHER_DBHOST
+          value: {{ .Values.pitcher.dbhost }}
+{{ if .Values.pitcher.datadogHost }}
+        - name: PITCHER_DATADOG_HOST
+          value: {{ .Values.pitcher.datadogHost}}
+{{ end }}
+        ports:
+        - name: pitcher
+          containerPort: 5000
+          protocol: TCP
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
