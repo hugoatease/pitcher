@@ -1,0 +1,33 @@
+# Default values for solr.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: quay.io/hugoatease/pitcher-solr
+  tag: latest
+  pullPolicy: IfNotPresent
+
+solr:
+  memory: 1000m
+  zkHost: zookeeper-zookeeper
+  zkPort: 2181
+
+service:
+  type: ClusterIP
+  port: 8983
+
+volume:
+  storage: 15Gi
+  className: standard
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 1Gi
+
+nodeSelector: {}

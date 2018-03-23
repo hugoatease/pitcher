@@ -1,0 +1,63 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: {{ template "solr.fullname" . }}
+  labels:
+    app: {{ template "solr.name" . }}
+    chart: {{ template "solr.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  serviceName: solr
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "solr.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "solr.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: solr
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["solr", "start", "-f", "-c", "-z", "{{ .Values.solr.zkHost }}:{{ .Values.solr.zkPort }}", "-t", "/data"]
+        resources:
+{{ toYaml .Values.resources | indent 12 }}
+        env:
+        - name: SOLR_PORT
+          value: "8983"
+        - name: SOLR_HEAP
+          value: "{{ .Values.solr.memory }}"
+        - name: SOLR_JAVA_MEM
+          value: "-Xms{{ .Values.solr.memory }} -Xmx{{ .Values.solr.memory }}"
+        ports:
+        - containerPort: 8983
+        volumeMounts:
+        - mountPath: /data
+          name: datadir
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 12 }}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: "app"
+                    operator: In
+                    values:
+                    - {{ template "solr.name" . }}
+              topologyKey: "kubernetes.io/hostname"
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.volume.storage }}
+      storageClassName: {{ .Values.volume.className }}
