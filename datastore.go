@@ -56,21 +56,21 @@ func CreateDB(config Config) (db *sqlx.DB, err error) {
 
 // GetTrackData returns Track matching MusicBrainz ID
 func GetTrackData(ctx context.Context, tracer *tracer.Tracer, db *sqlx.DB, trackID string) (*Track, error) {
-	params := trackQueryParams{
-		GID: trackID,
+	params := map[string]interface{}{
+		"gid": trackID,
 	}
 
 	track := Track{}
 
-	span, _ := tracer.NewChildSpanWithContext("GetTrackData.PrepareNamed", ctx)
-	query, err := db.PrepareNamed(trackQuery)
+	query, args, err := sqlx.Named(trackQuery, params)
 	if err != nil {
 		return nil, err
 	}
-	span.Finish()
 
-	span, _ = tracer.NewChildSpanWithContext("GetTrackData.Get", ctx)
-	err = query.Get(&track, params)
+	query = db.Rebind(query)
+
+	span, _ := tracer.NewChildSpanWithContext("GetTrackData.Get", ctx)
+	err = db.Get(&track, query, args...)
 	if err != nil {
 		return nil, err
 	}
