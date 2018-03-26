@@ -10,9 +10,8 @@ image:
   pullPolicy: IfNotPresent
 
 solr:
-  memory: 1000m
-  zkHost: zookeeper-zookeeper
-  zkPort: 2181
+  memory: 1024m
+  zkHost: zookeeper-zookeeper:2181
 
 service:
   type: ClusterIP
@@ -20,14 +19,14 @@ service:
 
 volume:
   storage: 15Gi
-  className: standard
+  className:
 
 resources:
   limits:
     cpu: 500m
-    memory: 1Gi
+    memory: 1024Mi
   requests:
     cpu: 100m
-    memory: 1Gi
+    memory: 1024Mi
 
 nodeSelector: {}
