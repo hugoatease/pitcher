@@ -8,7 +8,7 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
-  serviceName: solr
+  serviceName: {{ template "solr.fullname" . }}-headless
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
@@ -24,11 +24,13 @@ spec:
       - name: solr
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
-        command: ["solr", "start", "-f", "-c", "-z", "{{ .Values.solr.zkHost }}:{{ .Values.solr.zkPort }}", "-t", "/data"]
+        command: ["/bin/bash"]
+        args: ["-c", "solr start -f -c -z {{ .Values.solr.zkHost }}:{{ .Values.solr.zkPort }} -t /data -h $(hostname).{{ template "solr.fullname" . }}-headless"]
         resources:
 {{ toYaml .Values.resources | indent 12 }}
         env:
         - name: SOLR_HOST
+          value:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
@@ -38,8 +40,13 @@ spec:
           value: "{{ .Values.solr.memory }}"
         - name: SOLR_JAVA_MEM
           value: "-Xms{{ .Values.solr.memory }} -Xmx{{ .Values.solr.memory }}"
+        - name: ENABLE_REMOTE_JMX_OPTS
+          value: "true"
+        - name: RMI_PORT
+          value: "18983"
         ports:
         - containerPort: 8983
+        - containerPort: 18983
         volumeMounts:
         - mountPath: /data
           name: datadir
