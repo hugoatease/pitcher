@@ -1,0 +1,111 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "musicbrainz.fullname" . }}-import
+  labels:
+    app: {{ template "musicbrainz.name" . }}
+    chart: {{ template "musicbrainz.chart" . }}
+    component: import
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        app: {{ template "musicbrainz.name" . }}
+        component: import
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-import
+        image: "{{ .Values.import.image.repository }}:{{ .Values.import.image.tag }}"
+        imagePullPolicy: {{ .Values.import.image.pullPolicy }}
+        command: ["/recreatedb.sh"]
+        env:
+        - name: POSTGRES_HOST
+          value: {{ template "musicbrainz.fullname" . }}-postgres
+        - name: POSTGRES_USER
+          value: musicbrainz
+        - name: POSTGRES_PASSWORD
+          value: musicbrainz
+        - name: REDIS_HOST
+          value: redis
+        - name: REPLICATION_TOKEN
+          value: uiHFM7fhUfd2uDPTYEexMxkZe8Hmu2w52WSGmuDP
+        volumeMounts:
+        - mountPath: /media/dbdump
+          name: dbdump
+      volumes:
+      - name: dbdump
+        persistentVolumeClaim:
+          claimName: {{ template "musicbrainz.fullname" . }}-import
+      restartPolicy: Never
+    {{- with .Values.postgres.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.postgres.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.postgres.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "musicbrainz.fullname" . }}-replication
+  labels:
+    app: {{ template "musicbrainz.name" . }}
+    chart: {{ template "musicbrainz.chart" . }}
+    component: replication
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "5"
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: {{ template "musicbrainz.name" . }}
+            component: replication
+            release: {{ .Release.Name }}
+        spec:
+          containers:
+          - name: {{ .Chart.Name }}-replication
+            image: "{{ .Values.replication.image.repository }}:{{ .Values.replication.image.tag }}"
+            imagePullPolicy: {{ .Values.replication.image.pullPolicy }}
+            command: ["/replication.sh"]
+            env:
+            - name: POSTGRES_HOST
+              value: {{ template "musicbrainz.fullname" . }}-postgres
+            - name: POSTGRES_USER
+              value: musicbrainz
+            - name: POSTGRES_PASSWORD
+              value: musicbrainz
+            - name: REDIS_HOST
+              value: {{ .Values.replication.config.redisHost }}
+            - name: REPLICATION_TOKEN
+              value: {{ .Values.replication.config.replicationToken }}
+          restartPolicy: Never
+        {{- with .Values.postgres.nodeSelector }}
+          nodeSelector:
+    {{ toYaml . | indent 8 }}
+        {{- end }}
+        {{- with .Values.postgres.affinity }}
+          affinity:
+    {{ toYaml . | indent 8 }}
+        {{- end }}
+        {{- with .Values.postgres.tolerations }}
+          tolerations:
+    {{ toYaml . | indent 8 }}
+        {{- end }}
