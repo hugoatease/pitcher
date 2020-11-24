@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	sqltrace "github.com/DataDog/dd-trace-go/contrib/database/sql"
-	sqlxtrace "github.com/DataDog/dd-trace-go/contrib/jmoiron/sqlx"
-	"github.com/DataDog/dd-trace-go/tracer"
 	"github.com/jmoiron/sqlx"
-	pq "github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
@@ -50,12 +47,11 @@ type coverQueryParams struct {
 func CreateDB(config Config) (db *sqlx.DB, err error) {
 	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
 		config.DbHost, config.DbPort, config.DbName, config.DbUser, config.DbPassword)
-	sqltrace.Register("postgres", &pq.Driver{}, sqltrace.WithTracer(config.Tracer), sqltrace.WithServiceName("pitcher.db"))
-	return sqlxtrace.Open("postgres", connString)
+	return sqlx.Open("postgres", connString)
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
-func GetTrackData(ctx context.Context, tracer *tracer.Tracer, db *sqlx.DB, trackID string) (*Track, error) {
+func GetTrackData(ctx context.Context, db *sqlx.DB, trackID string) (*Track, error) {
 	params := map[string]interface{}{
 		"gid": trackID,
 	}
@@ -69,12 +65,10 @@ func GetTrackData(ctx context.Context, tracer *tracer.Tracer, db *sqlx.DB, track
 
 	query = db.Rebind(query)
 
-	span, _ := tracer.NewChildSpanWithContext("GetTrackData.Get", ctx)
 	err = db.Get(&track, query, args...)
 	if err != nil {
 		return nil, err
 	}
-	span.Finish()
 
 	return &track, nil
 }

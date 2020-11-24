@@ -4,8 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	muxtrace "github.com/DataDog/dd-trace-go/contrib/gorilla/mux"
-	"github.com/DataDog/dd-trace-go/tracer"
+	"github.com/gorilla/mux"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -16,7 +15,6 @@ type Config struct {
 	DbName     string
 	DbUser     string
 	DbPassword string
-	Tracer     *tracer.Tracer
 }
 
 type App struct {
@@ -39,8 +37,7 @@ func NewApp(config Config) (*App, error) {
 }
 
 func (app *App) Serve() {
-	r := muxtrace.NewRouter(muxtrace.WithTracer(app.Config.Tracer),
-		muxtrace.WithServiceName("pitcher.web"))
+	r := mux.NewRouter()
 	r.HandleFunc("/tracks/{trackID}", app.TrackHandler)
 	r.HandleFunc("/releases/{releaseID}/image", app.ReleaseImageHandler)
 	log.Print("serving on ", app.Config.Bind)

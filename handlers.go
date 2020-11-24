@@ -13,23 +13,20 @@ func (app *App) TrackHandler(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	trackID := vars["trackID"]
 
-	span, ctx := app.Config.Tracer.NewChildSpanWithContext("trackHandler.GetTrackData", req.Context())
-	track, err := GetTrackData(ctx, app.Config.Tracer, app.DB, trackID)
+	ctx := req.Context()
+	track, err := GetTrackData(ctx, app.DB, trackID)
 	if err != nil {
 		log.Print("Error fetching track data", err)
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	span.Finish()
 
-	span, _ = app.Config.Tracer.NewChildSpanWithContext("trackHandler.marshalJSON", req.Context())
 	result, err := json.Marshal(track)
 	if err != nil {
 		log.Print("Error marshalling")
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	span.Finish()
 
 	res.Write(result)
 }
