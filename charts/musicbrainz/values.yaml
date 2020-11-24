@@ -2,55 +2,52 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+image:
+  repository: tonearm/musicbrainz
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+podAnnotations: {}
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+replicationSchedule: "0 */2 * * *"
+replicationToken: ""
+
 postgres:
-  image:
-    repository: quay.io/hugoatease/musicbrainz-postgres
-    tag: latest
-    pullPolicy: IfNotPresent
+  host: postgres.default
+  port: "5432"
+  user: postgres
+  password: postgres
+  database: musicbrainz
 
-  persistence:
-    size: "60G"
-    storageClass: "-"
+redis:
+  host: redis.default
+  port: "6379"
 
-  service:
-    type: ClusterIP
-    port: 5432
-
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-
-import:
-  image:
-    repository: quay.io/hugoatease/musicbrainz
-    tag: latest
-    pullPolicy: IfNotPresent
-
-  persistence:
-    size: "30G"
-    storageClass: "-"
-
-  config:
-    redisHost: "redis"
-    replicationToken: ""
-
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-
-replication:
-  image:
-    repository: quay.io/hugoatease/musicbrainz
-    tag: latest
-    pullPolicy: IfNotPresent
-
-  config:
-    redisHost: "redis"
-    replicationToken: ""
-
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
+pvc:
+  resources:
+    requests:
+        storage: 20Gi
+  storageClassName: ""

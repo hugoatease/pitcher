@@ -1,0 +1,38 @@
+apiVersion: "kafka.strimzi.io/v1alpha1"
+kind: "KafkaConnector"
+metadata:
+  name: pitcher-musicbrainz
+  namespace: kafka
+  labels:
+    strimzi.io/cluster: pitcher # replace with your strimzi cluster
+spec:
+  class: io.confluent.connect.jdbc.JdbcSourceConnector
+  tasksMax: 1
+  config:
+    connection.url: jdbc:postgresql://postgres-postgresql.musicbrainz:5432/musicbrainz
+    connection.user: postgres
+    connection.password: "" # replace with postgres password
+    mode: incrementing
+    incrementing.column.name: t.id
+    quote.sql.identifiers: never
+    poll.interval.ms: 60000
+    topic.prefix: pitcher.track-info
+    key.converter: io.confluent.connect.avro.AvroConverter
+    key.converter.schema.registry.url: http://schema-registry-cp-schema-registry.kafka:8081
+    value.converter: io.confluent.connect.avro.AvroConverter
+    value.converter.schema.registry.url: http://schema-registry-cp-schema-registry.kafka:8081
+    transforms: dropId
+    transforms.dropId.type: "org.apache.kafka.connect.transforms.ReplaceField$Value"
+    transforms.dropId.blacklist: t.id
+    query: >
+      SELECT t.id as "t.id", t.gid::varchar as gid, rec.gid::varchar as recording_id, t.name AS track_name,
+      t.length AS track_length, c.name AS artist_name, r.name AS release_name,
+      r.release_group as release_group, rg.type as release_group_type,
+      COALESCE(rgst.secondary_type, -1) AS release_group_secondary_type,
+      r.status AS status, rec.video as video
+      FROM track t JOIN recording AS rec ON (rec.id = t.recording)
+      JOIN artist_credit c ON c.id = t.artist_credit
+      LEFT JOIN medium m ON m.id = t.medium
+      LEFT JOIN release r ON r.id = m.release
+      LEFT JOIN release_group as rg ON rg.id = r.release_group
+      LEFT JOIN release_group_secondary_type_join AS rgst ON rg.id = rgst.release_group

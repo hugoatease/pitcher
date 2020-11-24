@@ -1,0 +1,155 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "musicbrainz.fullname" . }}-import
+  labels:
+    {{- include "musicbrainz.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Chart.Name }}-import
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args: ["createdb.sh", "-fetch"]
+        env:
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "musicbrainz.fullname" . }}
+              key: postgres_host
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "musicbrainz.fullname" . }}
+              key: postgres_port
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "musicbrainz.fullname" . }}
+              key: postgres_user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "musicbrainz.fullname" . }}
+              key: postgres_password
+        - name: POSTGRES_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "musicbrainz.fullname" . }}
+              key: postgres_database
+        volumeMounts:
+        - mountPath: /media/dbdump
+          name: dbdump
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+      volumes:
+      - name: dbdump
+        persistentVolumeClaim:
+          claimName: {{ include "musicbrainz.fullname" . }}-dbdump
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      restartPolicy: Never
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "musicbrainz.fullname" . }}-replication
+  labels:
+    {{- include "musicbrainz.labels" . | nindent 4 }}
+spec:
+  schedule: "{{ .Values.replicationSchedule }}"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 8 }}
+          {{- end }}
+          containers:
+          - name: {{ .Chart.Name }}-replication
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}
+            args: ["./admin/replication/LoadReplicationChanges"]
+            env:
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: postgres_host
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: postgres_port
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: postgres_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: postgres_password
+            - name: POSTGRES_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: postgres_database
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: redis_host
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: redis_port
+            - name: REPLICATION_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "musicbrainz.fullname" . }}
+                  key: replication_token
+            resources:
+            {{- toYaml .Values.resources | nindent 14 }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          restartPolicy: Never
