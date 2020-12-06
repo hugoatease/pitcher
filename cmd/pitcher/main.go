@@ -2,10 +2,14 @@ package main
 
 import (
 	"log"
+	"net"
 	"os"
 
 	"github.com/hugoatease/pitcher"
+	pb "github.com/hugoatease/pitcher/protobuf"
 	"github.com/urfave/cli"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -51,6 +55,12 @@ func main() {
 			Usage:  "musicbrainz's postgresql database password",
 			EnvVar: "PITCHER_DBPASSWORD",
 		},
+		cli.StringFlag{
+			Name:   "solr",
+			Value:  "http://localhost:8983/",
+			Usage:  "solr server url",
+			EnvVar: "SOLR_URL",
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
@@ -61,15 +71,25 @@ func main() {
 			DbName:     c.String("dbname"),
 			DbUser:     c.String("dbuser"),
 			DbPassword: c.String("dbpassword"),
+			SolrURL:    c.String("solr"),
 		}
 
-		server, err := pitcher.NewApp(config)
+		lis, err := net.Listen("tcp", config.Bind)
+		if err != nil {
+			log.Fatalf("failed to listen: %v", err)
+		}
+
+		grpcServer := grpc.NewServer()
+		server, err := pitcher.NewServer(config)
 		if err != nil {
 			log.Fatal(err)
 			return err
 		}
 
-		server.Serve()
+		pb.RegisterPitcherServer(grpcServer, server)
+		reflection.Register(grpcServer)
+		grpcServer.Serve(lis)
+
 		return nil
 	}
 

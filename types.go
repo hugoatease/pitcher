@@ -42,6 +42,7 @@ type Album struct {
 
 // Track structure
 type Track struct {
+	ID             int64   `db:"id" json:"id"`
 	GID            string  `db:"gid" json:"mbid"`
 	RecordingID    string  `db:"recording_id" json:"recording_mbid"`
 	Name           string  `db:"name" json:"name"`
@@ -60,4 +61,16 @@ type CoverArtListing struct {
 	IsBack      bool   `db:"is_back" json:"is_back"`
 	MimeType    string `db:"mime_type" json:"mime_type"`
 	Suffix      string `db:"suffix" json:"suffix"`
+}
+
+type SolrDoc struct {
+	GID string `json:"gid"`
+}
+
+type SolrResponseBody struct {
+	Docs []SolrDoc `json:"docs"`
+}
+
+type SolrResponse struct {
+	Response SolrResponseBody `json:"response"`
 }

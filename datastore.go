@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	pb "github.com/hugoatease/pitcher/protobuf"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
@@ -12,17 +13,17 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        track.length, track.position, medium.position AS medium_position,
 			 album.gid "album.gid", album.name "album.name",
 			 artist.gid "artist.gid", artist.name "artist.name",
-			 album.id "album.id", release.gid "album.release_gid",
-			 release_date.date_year "album.releasedate.date_year",
-			 release_date.date_month "album.releasedate.date_month",
-			 release_date.date_day "album.releasedate.date_day"
+			 album.id "album.id", release.gid "album.gid",
+			 release_date.year "album.release_date.year",
+			 release_date.month "album.release_date.month",
+			 release_date.day "album.release_date.day"
        FROM track JOIN recording AS rec ON (rec.id = track.recording)
 			 JOIN artist_credit_name AS artist_credit_name ON artist_credit_name.artist_credit = track.artist_credit
 			 JOIN artist AS artist ON artist.id = artist_credit_name.artist
        JOIN medium ON medium.id = track.medium
        JOIN release as release ON release.id = medium.release
 			 JOIN release_group AS album ON album.id = release.release_group
-			 LEFT JOIN LATERAL (SELECT date_year, date_month, date_day FROM release_country WHERE release=release.id) release_date ON true
+			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id) release_date ON true
        WHERE track.gid = :gid
 			 ORDER BY artist_credit_name.position LIMIT 1`
 
@@ -51,12 +52,12 @@ func CreateDB(config Config) (db *sqlx.DB, err error) {
 }
 
 // GetTrackData returns Track matching MusicBrainz ID
-func GetTrackData(ctx context.Context, db *sqlx.DB, trackID string) (*Track, error) {
+func GetTrackData(ctx context.Context, db *sqlx.DB, trackID string) (*pb.Track, error) {
 	params := map[string]interface{}{
 		"gid": trackID,
 	}
 
-	track := Track{}
+	track := pb.Track{}
 
 	query, args, err := sqlx.Named(trackQuery, params)
 	if err != nil {
