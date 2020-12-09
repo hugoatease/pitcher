@@ -14,9 +14,9 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
 			 album.gid "album.gid", album.name "album.name",
 			 artist.gid "artist.gid", artist.name "artist.name",
 			 album.id "album.id", release.gid "album.gid",
-			 release_date.year "album.release_date.year",
-			 release_date.month "album.release_date.month",
-			 release_date.day "album.release_date.day"
+			 COALESCE(release_date.year, -1) "album.release_date.year",
+			 COALESCE(release_date.month, -1) "album.release_date.month",
+			 COALESCE(release_date.day, -1) "album.release_date.day"
        FROM track JOIN recording AS rec ON (rec.id = track.recording)
 			 JOIN artist_credit_name AS artist_credit_name ON artist_credit_name.artist_credit = track.artist_credit
 			 JOIN artist AS artist ON artist.id = artist_credit_name.artist
