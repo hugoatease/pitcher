@@ -4,6 +4,7 @@ option go_package = "github.com/hugoatease/pitcher/protobuf";
 service Pitcher {
   rpc MatchTrack(MatchingRequest) returns (MatchingResponse) {}
   rpc GetTrack(TrackRequest) returns (TrackResponse) {}
+  rpc GetTracks(TracksRequest) returns (TracksResponse) {}
 }
 
 message MatchingRequest {
@@ -22,6 +23,14 @@ message TrackRequest {
 
 message TrackResponse {
   Track track = 1;
+}
+
+message TracksRequest {
+  repeated string gids = 1;
+}
+
+message TracksResponse {
+  repeated Track tracks = 1;
 }
 
 message Artist {

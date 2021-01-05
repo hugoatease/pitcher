@@ -111,3 +111,16 @@ func (s *PitcherServer) GetTrack(ctx context.Context, request *pb.TrackRequest) 
 
 	return &response, nil
 }
+
+func (s *PitcherServer) GetTracks(ctx context.Context, request *pb.TracksRequest) (*pb.TracksResponse, error) {
+	tracks, err := GetTracksData(ctx, s.DB, request.Gids)
+	if err != nil {
+		return nil, err
+	}
+
+	response := pb.TracksResponse{
+		Tracks: tracks,
+	}
+
+	return &response, nil
+}

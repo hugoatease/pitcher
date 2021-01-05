@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 type PitcherClient interface {
 	MatchTrack(ctx context.Context, in *MatchingRequest, opts ...grpc.CallOption) (*MatchingResponse, error)
 	GetTrack(ctx context.Context, in *TrackRequest, opts ...grpc.CallOption) (*TrackResponse, error)
+	GetTracks(ctx context.Context, in *TracksRequest, opts ...grpc.CallOption) (*TracksResponse, error)
 }
 
 type pitcherClient struct {
@@ -47,12 +48,22 @@ func (c *pitcherClient) GetTrack(ctx context.Context, in *TrackRequest, opts ...
 	return out, nil
 }
 
+func (c *pitcherClient) GetTracks(ctx context.Context, in *TracksRequest, opts ...grpc.CallOption) (*TracksResponse, error) {
+	out := new(TracksResponse)
+	err := c.cc.Invoke(ctx, "/Pitcher/GetTracks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PitcherServer is the server API for Pitcher service.
 // All implementations must embed UnimplementedPitcherServer
 // for forward compatibility
 type PitcherServer interface {
 	MatchTrack(context.Context, *MatchingRequest) (*MatchingResponse, error)
 	GetTrack(context.Context, *TrackRequest) (*TrackResponse, error)
+	GetTracks(context.Context, *TracksRequest) (*TracksResponse, error)
 	mustEmbedUnimplementedPitcherServer()
 }
 
@@ -65,6 +76,9 @@ func (UnimplementedPitcherServer) MatchTrack(context.Context, *MatchingRequest) 
 }
 func (UnimplementedPitcherServer) GetTrack(context.Context, *TrackRequest) (*TrackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTrack not implemented")
+}
+func (UnimplementedPitcherServer) GetTracks(context.Context, *TracksRequest) (*TracksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTracks not implemented")
 }
 func (UnimplementedPitcherServer) mustEmbedUnimplementedPitcherServer() {}
 
@@ -115,6 +129,24 @@ func _Pitcher_GetTrack_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Pitcher_GetTracks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TracksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PitcherServer).GetTracks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Pitcher/GetTracks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PitcherServer).GetTracks(ctx, req.(*TracksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Pitcher_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Pitcher",
 	HandlerType: (*PitcherServer)(nil),
@@ -126,6 +158,10 @@ var _Pitcher_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTrack",
 			Handler:    _Pitcher_GetTrack_Handler,
+		},
+		{
+			MethodName: "GetTracks",
+			Handler:    _Pitcher_GetTracks_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
