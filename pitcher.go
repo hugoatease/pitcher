@@ -139,11 +139,18 @@ func (s *PitcherServer) GetCoverArt(ctx context.Context, request *pb.CoverArtReq
 		return nil, err
 	}
 
-	fileName := strconv.FormatInt(info.ID, 10) + "." + info.Suffix
-	url := "https://archive.org/download/mbid-" + info.ReleaseMbID + "/mbid-" + info.ReleaseMbID + "-" + fileName
+	fileID := strconv.FormatInt(info.ID, 10)
+	fileURL := "https://archive.org/download/mbid-" + info.ReleaseMbID + "/mbid-" + info.ReleaseMbID
+	originalURL := fileURL + "-" + fileID + "." + info.Suffix
+	smallURL := fileURL + "-" + fileID + "_thumb250." + info.Suffix
+	mediumURL := fileURL + "-" + fileID + "_thumb500." + info.Suffix
+	largeURL := fileURL + "-" + fileID + "_thumb1200." + info.Suffix
 
 	response := pb.CoverArtResponse{
-		Url: url,
+		Url:       originalURL,
+		SmallUrl:  smallURL,
+		MediumUrl: mediumURL,
+		LargeUrl:  largeURL,
 	}
 
 	return &response, nil

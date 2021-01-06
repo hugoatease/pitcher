@@ -40,6 +40,9 @@ message CoverArtRequest {
 
 message CoverArtResponse {
   string url = 1;
+  string small_url = 2;
+  string medium_url = 3;
+  string large_url = 4;
 }
 
 message Artist {
