@@ -25,10 +25,6 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
 			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id LIMIT 1) release_date ON true
        WHERE track.gid = :gid AND artist_credit_name.position = 0`
 
-type trackQueryParams struct {
-	GID string `db:"gid"`
-}
-
 const tracksQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        track.length, track.position, medium.position AS medium_position,
 			 album.gid "album.gid", album.name "album.name",
@@ -45,18 +41,37 @@ const tracksQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
 			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id LIMIT 1) release_date ON true
        WHERE track.gid IN (?) AND artist_credit_name.position = 0`
 
-const coverQuery = `SELECT listing.id AS id, release.gid AS release_mbid,
-        listing.is_front AS is_front, listing.is_back AS is_back,
-				listing.mime_type AS mime_type, image_type.suffix AS suffix
-				FROM musicbrainz.release as release
-				JOIN cover_art_archive.cover_art as coverart on (coverart.release=release.id)
-				JOIN cover_art_archive.index_listing as listing ON (coverart.id=listing.id)
-				JOIN cover_art_archive.image_type as image_type ON (image_type.mime_type=listing.mime_type)
-				WHERE release.gid = :gid AND is_front=true ORDER BY ordering LIMIT 1`
+const preferredCoverReleaseQuery = `SELECT DISTINCT ON (release.release_group)
+          release.gid AS mbid
+        FROM cover_art_archive.index_listing
+        JOIN musicbrainz.release
+          ON musicbrainz.release.id = cover_art_archive.index_listing.release
+        JOIN musicbrainz.release_group
+          ON release_group.id = release.release_group
+        LEFT JOIN (
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_country
+          UNION ALL
+          SELECT release, date_year, date_month, date_day
+          FROM musicbrainz.release_unknown_country
+        ) release_event ON (release_event.release = release.id)
+        FULL OUTER JOIN cover_art_archive.release_group_cover_art
+        ON release_group_cover_art.release = musicbrainz.release.id
+        WHERE release_group.gid = :gid
+        AND is_front = true
+        ORDER BY release.release_group, release_group_cover_art.release,
+          release_event.date_year, release_event.date_month,
+					release_event.date_day`
 
-type coverQueryParams struct {
-	GID string `db:"gid"`
-}
+const coverFileInfoQuery = `SELECT index_listing.id, image_type.suffix
+              FROM cover_art_archive.index_listing
+              JOIN musicbrainz.release
+                ON cover_art_archive.index_listing.release = musicbrainz.release.id
+              JOIN cover_art_archive.image_type
+                ON cover_art_archive.index_listing.mime_type = cover_art_archive.image_type.mime_type
+             WHERE musicbrainz.release.gid = :gid
+               AND is_front = true
+					ORDER BY ordering ASC LIMIT 1`
 
 // CreateDB returns database connection
 func CreateDB(config Config) (db *sqlx.DB, err error) {
@@ -107,23 +122,44 @@ func GetTracksData(ctx context.Context, db *sqlx.DB, trackIDs []string) ([]*pb.T
 	return tracks, nil
 }
 
-// GetReleaseImageData returns image data for releaseID
-func GetReleaseImageData(db *sqlx.DB, releaseID string) (*CoverArtListing, error) {
-	params := coverQueryParams{
-		GID: releaseID,
+// GetCoverFileInfoByReleaseGroup returns image data for releaseGroupID
+func GetCoverFileInfoByReleaseGroup(ctx context.Context, db *sqlx.DB, releaseGroupID string) (*CoverFileInfo, error) {
+	params := map[string]interface{}{
+		"gid": releaseGroupID,
 	}
 
-	listing := CoverArtListing{}
+	preferredCoverRelease := PreferredCoverRelease{}
 
-	query, err := db.Preparex(coverQuery)
+	query, args, err := sqlx.Named(preferredCoverReleaseQuery, params)
 	if err != nil {
 		return nil, err
 	}
 
-	err = query.Get(&listing, params)
+	query = db.Rebind(query)
+
+	err = db.Get(&preferredCoverRelease, query, args...)
 	if err != nil {
 		return nil, err
 	}
 
-	return &listing, nil
+	infoQueryParams := map[string]interface{}{
+		"gid": preferredCoverRelease.MbID,
+	}
+
+	coverFileInfo := CoverFileInfo{
+		ReleaseMbID: preferredCoverRelease.MbID,
+	}
+
+	query, args, err = sqlx.Named(coverFileInfoQuery, infoQueryParams)
+	if err != nil {
+		return nil, err
+	}
+
+	query = db.Rebind(query)
+
+	err = db.Get(&coverFileInfo, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	return &coverFileInfo, nil
 }

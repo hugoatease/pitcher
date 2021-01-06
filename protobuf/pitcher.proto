@@ -5,6 +5,7 @@ service Pitcher {
   rpc MatchTrack(MatchingRequest) returns (MatchingResponse) {}
   rpc GetTrack(TrackRequest) returns (TrackResponse) {}
   rpc GetTracks(TracksRequest) returns (TracksResponse) {}
+  rpc GetCoverArt(CoverArtRequest) returns (CoverArtResponse) {}
 }
 
 message MatchingRequest {
@@ -31,6 +32,14 @@ message TracksRequest {
 
 message TracksResponse {
   map<string, Track> tracks = 1;
+}
+
+message CoverArtRequest {
+  string album_gid = 1;
+}
+
+message CoverArtResponse {
+  string url = 1;
 }
 
 message Artist {

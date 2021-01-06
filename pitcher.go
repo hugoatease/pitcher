@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/jmoiron/sqlx"
@@ -127,6 +128,22 @@ func (s *PitcherServer) GetTracks(ctx context.Context, request *pb.TracksRequest
 
 	response := pb.TracksResponse{
 		Tracks: keyedTracks,
+	}
+
+	return &response, nil
+}
+
+func (s *PitcherServer) GetCoverArt(ctx context.Context, request *pb.CoverArtRequest) (*pb.CoverArtResponse, error) {
+	info, err := GetCoverFileInfoByReleaseGroup(ctx, s.DB, request.AlbumGid)
+	if err != nil {
+		return nil, err
+	}
+
+	fileName := strconv.FormatInt(info.ID, 10) + "." + info.Suffix
+	url := "https://archive.org/download/mbid-" + info.ReleaseMbID + "/mbid-" + info.ReleaseMbID + "-" + fileName
+
+	response := pb.CoverArtResponse{
+		Url: url,
 	}
 
 	return &response, nil
