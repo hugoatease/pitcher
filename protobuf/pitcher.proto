@@ -30,7 +30,7 @@ message TracksRequest {
 }
 
 message TracksResponse {
-  repeated Track tracks = 1;
+  map<string, Track> tracks = 1;
 }
 
 message Artist {

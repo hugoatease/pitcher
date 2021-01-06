@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/jmoiron/sqlx/reflectx"
 
+	"github.com/hugoatease/pitcher/protobuf"
 	pb "github.com/hugoatease/pitcher/protobuf"
 )
 
@@ -118,8 +119,14 @@ func (s *PitcherServer) GetTracks(ctx context.Context, request *pb.TracksRequest
 		return nil, err
 	}
 
+	keyedTracks := make(map[string]*protobuf.Track)
+
+	for _, track := range tracks {
+		keyedTracks[track.Gid] = track
+	}
+
 	response := pb.TracksResponse{
-		Tracks: tracks,
+		Tracks: keyedTracks,
 	}
 
 	return &response, nil
