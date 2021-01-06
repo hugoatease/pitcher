@@ -23,9 +23,8 @@ const trackQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        JOIN medium ON medium.id = track.medium
        JOIN release as release ON release.id = medium.release
 			 JOIN release_group AS album ON album.id = release.release_group
-			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id) release_date ON true
-       WHERE track.gid = :gid
-			 ORDER BY artist_credit_name.position LIMIT 1`
+			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id LIMIT 1) release_date ON true
+       WHERE track.gid = :gid AND artist_credit_name.position = 0`
 
 type trackQueryParams struct {
 	GID string `db:"gid"`
@@ -45,9 +44,8 @@ const tracksQuery = `SELECT track.gid, rec.gid as recording_id, track.name,
        JOIN medium ON medium.id = track.medium
        JOIN release as release ON release.id = medium.release
 			 JOIN release_group AS album ON album.id = release.release_group
-			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id) release_date ON true
-       WHERE track.gid IN (?)
-			 ORDER BY artist_credit_name.position`
+			 LEFT JOIN LATERAL (SELECT date_year AS year, date_month AS month, date_day AS day FROM release_country WHERE release=release.id LIMIT 1) release_date ON true
+       WHERE track.gid IN (?) AND artist_credit_name.position = 0`
 
 const coverQuery = `SELECT listing.id AS id, release.gid AS release_mbid,
         listing.is_front AS is_front, listing.is_back AS is_back,
