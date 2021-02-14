@@ -155,3 +155,35 @@ func (s *PitcherServer) GetCoverArt(ctx context.Context, request *pb.CoverArtReq
 
 	return &response, nil
 }
+
+func (s *PitcherServer) GetArtist(ctx context.Context, request *pb.ArtistRequest) (*pb.ArtistResponse, error) {
+	artist, err := GetArtistData(ctx, s.DB, request.Gid)
+	if err != nil {
+		return nil, err
+	}
+
+	response := pb.ArtistResponse{
+		Artist: artist,
+	}
+
+	return &response, nil
+}
+
+func (s *PitcherServer) GetArtists(ctx context.Context, request *pb.ArtistsRequest) (*pb.ArtistsResponse, error) {
+	artists, err := GetArtistsData(ctx, s.DB, request.Gids)
+	if err != nil {
+		return nil, err
+	}
+
+	keyedArtists := make(map[string]*protobuf.Artist)
+
+	for _, artist := range artists {
+		keyedArtists[artist.Gid] = artist
+	}
+
+	response := pb.ArtistsResponse{
+		Artists: keyedArtists,
+	}
+
+	return &response, nil
+}

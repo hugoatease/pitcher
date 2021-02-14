@@ -73,6 +73,14 @@ const coverFileInfoQuery = `SELECT index_listing.id, image_type.suffix
                AND is_front = true
 					ORDER BY ordering ASC LIMIT 1`
 
+const artistQuery = `SELECT id, gid, name
+							FROM artist
+							WHERE artist.gid = :gid`
+
+const artistsQuery = `SELECT id, gid, name
+							FROM artist
+							WHERE artist.gid IN (?)`
+
 // CreateDB returns database connection
 func CreateDB(config Config) (db *sqlx.DB, err error) {
 	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
@@ -162,4 +170,46 @@ func GetCoverFileInfoByReleaseGroup(ctx context.Context, db *sqlx.DB, releaseGro
 		return nil, err
 	}
 	return &coverFileInfo, nil
+}
+
+// GetArtistData returns Artist matching MusicBrainz ID
+func GetArtistData(ctx context.Context, db *sqlx.DB, artistID string) (*pb.Artist, error) {
+	params := map[string]interface{}{
+		"gid": artistID,
+	}
+
+	artist := pb.Artist{}
+
+	query, args, err := sqlx.Named(artistQuery, params)
+	if err != nil {
+		return nil, err
+	}
+
+	query = db.Rebind(query)
+
+	err = db.Get(&artist, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return &artist, nil
+}
+
+// GetArtistsData returns Artists matching a list of MusicBrainz IDs
+func GetArtistsData(ctx context.Context, db *sqlx.DB, artistIDs []string) ([]*pb.Artist, error) {
+	artists := []*pb.Artist{}
+
+	query, args, err := sqlx.In(artistsQuery, artistIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	query = db.Rebind(query)
+
+	err = db.Select(&artists, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return artists, nil
 }

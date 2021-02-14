@@ -21,6 +21,8 @@ type PitcherClient interface {
 	GetTrack(ctx context.Context, in *TrackRequest, opts ...grpc.CallOption) (*TrackResponse, error)
 	GetTracks(ctx context.Context, in *TracksRequest, opts ...grpc.CallOption) (*TracksResponse, error)
 	GetCoverArt(ctx context.Context, in *CoverArtRequest, opts ...grpc.CallOption) (*CoverArtResponse, error)
+	GetArtist(ctx context.Context, in *ArtistRequest, opts ...grpc.CallOption) (*ArtistResponse, error)
+	GetArtists(ctx context.Context, in *ArtistsRequest, opts ...grpc.CallOption) (*ArtistsResponse, error)
 }
 
 type pitcherClient struct {
@@ -67,6 +69,24 @@ func (c *pitcherClient) GetCoverArt(ctx context.Context, in *CoverArtRequest, op
 	return out, nil
 }
 
+func (c *pitcherClient) GetArtist(ctx context.Context, in *ArtistRequest, opts ...grpc.CallOption) (*ArtistResponse, error) {
+	out := new(ArtistResponse)
+	err := c.cc.Invoke(ctx, "/Pitcher/GetArtist", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *pitcherClient) GetArtists(ctx context.Context, in *ArtistsRequest, opts ...grpc.CallOption) (*ArtistsResponse, error) {
+	out := new(ArtistsResponse)
+	err := c.cc.Invoke(ctx, "/Pitcher/GetArtists", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PitcherServer is the server API for Pitcher service.
 // All implementations must embed UnimplementedPitcherServer
 // for forward compatibility
@@ -75,6 +95,8 @@ type PitcherServer interface {
 	GetTrack(context.Context, *TrackRequest) (*TrackResponse, error)
 	GetTracks(context.Context, *TracksRequest) (*TracksResponse, error)
 	GetCoverArt(context.Context, *CoverArtRequest) (*CoverArtResponse, error)
+	GetArtist(context.Context, *ArtistRequest) (*ArtistResponse, error)
+	GetArtists(context.Context, *ArtistsRequest) (*ArtistsResponse, error)
 	mustEmbedUnimplementedPitcherServer()
 }
 
@@ -93,6 +115,12 @@ func (UnimplementedPitcherServer) GetTracks(context.Context, *TracksRequest) (*T
 }
 func (UnimplementedPitcherServer) GetCoverArt(context.Context, *CoverArtRequest) (*CoverArtResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCoverArt not implemented")
+}
+func (UnimplementedPitcherServer) GetArtist(context.Context, *ArtistRequest) (*ArtistResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtist not implemented")
+}
+func (UnimplementedPitcherServer) GetArtists(context.Context, *ArtistsRequest) (*ArtistsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtists not implemented")
 }
 func (UnimplementedPitcherServer) mustEmbedUnimplementedPitcherServer() {}
 
@@ -179,6 +207,42 @@ func _Pitcher_GetCoverArt_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Pitcher_GetArtist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtistRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PitcherServer).GetArtist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Pitcher/GetArtist",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PitcherServer).GetArtist(ctx, req.(*ArtistRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Pitcher_GetArtists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtistsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PitcherServer).GetArtists(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Pitcher/GetArtists",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PitcherServer).GetArtists(ctx, req.(*ArtistsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Pitcher_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Pitcher",
 	HandlerType: (*PitcherServer)(nil),
@@ -198,6 +262,14 @@ var _Pitcher_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCoverArt",
 			Handler:    _Pitcher_GetCoverArt_Handler,
+		},
+		{
+			MethodName: "GetArtist",
+			Handler:    _Pitcher_GetArtist_Handler,
+		},
+		{
+			MethodName: "GetArtists",
+			Handler:    _Pitcher_GetArtists_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
