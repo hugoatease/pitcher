@@ -81,6 +81,14 @@ const artistsQuery = `SELECT id, gid, name
 							FROM artist
 							WHERE artist.gid IN (?)`
 
+const releaseGroupUrlsQuery = `
+	SELECT url.id, url.url, url.gid
+	FROM release_group AS rg
+	JOIN release AS r ON rg.id=r.release_group
+	JOIN l_release_url AS rel ON r.id=rel.entity0
+	JOIN url ON rel.entity1=url.id
+	WHERE rg.gid = :gid`
+
 // CreateDB returns database connection
 func CreateDB(config Config) (db *sqlx.DB, err error) {
 	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
@@ -212,4 +220,26 @@ func GetArtistsData(ctx context.Context, db *sqlx.DB, artistIDs []string) ([]*pb
 	}
 
 	return artists, nil
+}
+
+// GetReleaseGroupUrls return external urls for release group's releases
+func GetReleaseGroupUrls(ctx context.Context, db *sqlx.DB, releaseGroupID string) ([]*pb.ReleaseGroupURL, error) {
+	urls := []*pb.ReleaseGroupURL{}
+
+	params := map[string]interface{}{
+		"gid": releaseGroupID,
+	}
+
+	query, args, err := sqlx.Named(releaseGroupUrlsQuery, params)
+	if err != nil {
+		return nil, err
+	}
+
+	query = db.Rebind(query)
+	err = db.Select(&urls, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return urls, nil
 }

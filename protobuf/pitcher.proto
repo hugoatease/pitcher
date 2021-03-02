@@ -8,6 +8,7 @@ service Pitcher {
   rpc GetCoverArt(CoverArtRequest) returns (CoverArtResponse) {}
   rpc GetArtist(ArtistRequest) returns (ArtistResponse) {}
   rpc GetArtists(ArtistsRequest) returns (ArtistsResponse) {}
+  rpc GetReleaseGroupURLs(ReleaseGroupURLsRequest) returns (ReleaseGroupURLsResponse) {}
 }
 
 message MatchingRequest {
@@ -63,6 +64,14 @@ message ArtistsResponse {
   map<string, Artist> artists = 1;
 }
 
+message ReleaseGroupURLsRequest {
+  string gid = 1;
+}
+
+message ReleaseGroupURLsResponse {
+  repeated ReleaseGroupURL urls = 1;
+}
+
 message Artist {
   int64 id = 1;
   string gid = 2;
@@ -92,4 +101,10 @@ message Track {
   Album album = 7;
   int32 position = 8;
   int32 medium_position = 9;
+}
+
+message ReleaseGroupURL {
+  int64 id = 1;
+  string gid = 2;
+  string url = 3;
 }
