@@ -24,6 +24,7 @@ type PitcherClient interface {
 	GetArtist(ctx context.Context, in *ArtistRequest, opts ...grpc.CallOption) (*ArtistResponse, error)
 	GetArtists(ctx context.Context, in *ArtistsRequest, opts ...grpc.CallOption) (*ArtistsResponse, error)
 	GetReleaseGroupURLs(ctx context.Context, in *ReleaseGroupURLsRequest, opts ...grpc.CallOption) (*ReleaseGroupURLsResponse, error)
+	GetArtistURLs(ctx context.Context, in *ArtistURLsRequest, opts ...grpc.CallOption) (*ArtistURLsResponse, error)
 }
 
 type pitcherClient struct {
@@ -97,6 +98,15 @@ func (c *pitcherClient) GetReleaseGroupURLs(ctx context.Context, in *ReleaseGrou
 	return out, nil
 }
 
+func (c *pitcherClient) GetArtistURLs(ctx context.Context, in *ArtistURLsRequest, opts ...grpc.CallOption) (*ArtistURLsResponse, error) {
+	out := new(ArtistURLsResponse)
+	err := c.cc.Invoke(ctx, "/Pitcher/GetArtistURLs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PitcherServer is the server API for Pitcher service.
 // All implementations must embed UnimplementedPitcherServer
 // for forward compatibility
@@ -108,6 +118,7 @@ type PitcherServer interface {
 	GetArtist(context.Context, *ArtistRequest) (*ArtistResponse, error)
 	GetArtists(context.Context, *ArtistsRequest) (*ArtistsResponse, error)
 	GetReleaseGroupURLs(context.Context, *ReleaseGroupURLsRequest) (*ReleaseGroupURLsResponse, error)
+	GetArtistURLs(context.Context, *ArtistURLsRequest) (*ArtistURLsResponse, error)
 	mustEmbedUnimplementedPitcherServer()
 }
 
@@ -135,6 +146,9 @@ func (UnimplementedPitcherServer) GetArtists(context.Context, *ArtistsRequest) (
 }
 func (UnimplementedPitcherServer) GetReleaseGroupURLs(context.Context, *ReleaseGroupURLsRequest) (*ReleaseGroupURLsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReleaseGroupURLs not implemented")
+}
+func (UnimplementedPitcherServer) GetArtistURLs(context.Context, *ArtistURLsRequest) (*ArtistURLsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetArtistURLs not implemented")
 }
 func (UnimplementedPitcherServer) mustEmbedUnimplementedPitcherServer() {}
 
@@ -275,6 +289,24 @@ func _Pitcher_GetReleaseGroupURLs_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Pitcher_GetArtistURLs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtistURLsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PitcherServer).GetArtistURLs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Pitcher/GetArtistURLs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PitcherServer).GetArtistURLs(ctx, req.(*ArtistURLsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Pitcher_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "Pitcher",
 	HandlerType: (*PitcherServer)(nil),
@@ -306,6 +338,10 @@ var _Pitcher_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReleaseGroupURLs",
 			Handler:    _Pitcher_GetReleaseGroupURLs_Handler,
+		},
+		{
+			MethodName: "GetArtistURLs",
+			Handler:    _Pitcher_GetArtistURLs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

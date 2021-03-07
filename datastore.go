@@ -89,6 +89,14 @@ const releaseGroupUrlsQuery = `
 	JOIN url ON rel.entity1=url.id
 	WHERE rg.gid = :gid`
 
+const artistUrlsQuery = `
+	SELECT url.id, url.url, url.gid
+	FROM artist
+	JOIN l_artist_url AS rel ON artist.id=rel.entity0
+	JOIN url ON rel.entity1=url.id
+	WHERE artist.gid = :gid
+`
+
 // CreateDB returns database connection
 func CreateDB(config Config) (db *sqlx.DB, err error) {
 	connString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=disable search_path=musicbrainz",
@@ -223,14 +231,36 @@ func GetArtistsData(ctx context.Context, db *sqlx.DB, artistIDs []string) ([]*pb
 }
 
 // GetReleaseGroupUrls return external urls for release group's releases
-func GetReleaseGroupUrls(ctx context.Context, db *sqlx.DB, releaseGroupID string) ([]*pb.ReleaseGroupURL, error) {
-	urls := []*pb.ReleaseGroupURL{}
+func GetReleaseGroupUrls(ctx context.Context, db *sqlx.DB, releaseGroupID string) ([]*pb.URL, error) {
+	urls := []*pb.URL{}
 
 	params := map[string]interface{}{
 		"gid": releaseGroupID,
 	}
 
 	query, args, err := sqlx.Named(releaseGroupUrlsQuery, params)
+	if err != nil {
+		return nil, err
+	}
+
+	query = db.Rebind(query)
+	err = db.Select(&urls, query, args...)
+	if err != nil {
+		return nil, err
+	}
+
+	return urls, nil
+}
+
+// GetArtistUrls return external urls for artists' releases
+func GetArtistUrls(ctx context.Context, db *sqlx.DB, artistID string) ([]*pb.URL, error) {
+	urls := []*pb.URL{}
+
+	params := map[string]interface{}{
+		"gid": artistID,
+	}
+
+	query, args, err := sqlx.Named(artistUrlsQuery, params)
 	if err != nil {
 		return nil, err
 	}

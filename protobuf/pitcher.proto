@@ -9,6 +9,7 @@ service Pitcher {
   rpc GetArtist(ArtistRequest) returns (ArtistResponse) {}
   rpc GetArtists(ArtistsRequest) returns (ArtistsResponse) {}
   rpc GetReleaseGroupURLs(ReleaseGroupURLsRequest) returns (ReleaseGroupURLsResponse) {}
+  rpc GetArtistURLs(ArtistURLsRequest) returns (ArtistURLsResponse) {}
 }
 
 message MatchingRequest {
@@ -69,7 +70,15 @@ message ReleaseGroupURLsRequest {
 }
 
 message ReleaseGroupURLsResponse {
-  repeated ReleaseGroupURL urls = 1;
+  repeated URL urls = 1;
+}
+
+message ArtistURLsRequest {
+  string gid = 1;
+}
+
+message ArtistURLsResponse {
+  repeated URL urls = 1;
 }
 
 message Artist {
@@ -103,7 +112,7 @@ message Track {
   int32 medium_position = 9;
 }
 
-message ReleaseGroupURL {
+message URL {
   int64 id = 1;
   string gid = 2;
   string url = 3;

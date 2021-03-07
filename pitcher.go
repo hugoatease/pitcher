@@ -200,3 +200,16 @@ func (s *PitcherServer) GetReleaseGroupURLs(ctx context.Context, request *pb.Rel
 
 	return &response, nil
 }
+
+func (s *PitcherServer) GetArtistURLs(ctx context.Context, request *pb.ArtistURLsRequest) (*pb.ArtistURLsResponse, error) {
+	urls, err := GetArtistUrls(ctx, s.DB, request.Gid)
+	if err != nil {
+		return nil, err
+	}
+
+	response := pb.ArtistURLsResponse{
+		Urls: urls,
+	}
+
+	return &response, nil
+}
